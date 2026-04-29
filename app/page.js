@@ -127,34 +127,25 @@ function EclipseView() {
 
 function MoonCycleView() {
   const [year, setYear] = useState('');
-  const [month, setMonth] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const d = new Date();
-    const currentYear = d.getFullYear().toString();
-    const currentMonth = (d.getMonth() + 1).toString();
-    setYear(currentYear);
-    setMonth(currentMonth);
-    fetchMoonData(currentYear, currentMonth);
+    const y = new Date().getFullYear().toString();
+    setYear(y);
+    fetchCycleData(y);
   }, []);
 
-  async function fetchMoonData(y, m) {
-    if (!y || !m) return;
+  async function fetchCycleData(y) {
+    if (!y) return;
     setLoading(true);
     setError('');
     setData(null);
-
     try {
-      const res = await fetch(`/api/moon?year=${y}&month=${m}`);
+      const res  = await fetch(`/api/moon-cycle?year=${y}`);
       const json = await res.json();
-
-      if (!res.ok) {
-        throw new Error(json.error || 'Failed to fetch moon data');
-      }
-
+      if (!res.ok) throw new Error(json.error || 'Computation failed');
       setData(json);
     } catch (err) {
       setError(err.message);
@@ -163,68 +154,74 @@ function MoonCycleView() {
     }
   }
 
-  function handleSearch() {
-    fetchMoonData(year, month);
-  }
+  const PHENOM_CLASS = {
+    'Perigee':                   'phenom-perigee',
+    'Apogee':                    'phenom-apogee',
+    'New Moon':                  'phenom-new-moon',
+    'Full Moon':                 'phenom-full-moon',
+    'Equatorial Farthest North': 'phenom-eq-north',
+    'Equatorial Farthest South': 'phenom-eq-south',
+    'Equatorial Passage':        'phenom-eq-passage',
+  };
 
   return (
     <>
       <div className="search-card">
         <div className="field">
-          <label htmlFor="moonYearInput">Year</label>
+          <label htmlFor="cycleYearInput">Year</label>
           <input
             type="number"
-            id="moonYearInput"
+            id="cycleYearInput"
             value={year}
+            min="1900"
+            max="2100"
             onChange={(e) => setYear(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && fetchCycleData(year)}
+            placeholder="e.g. 2026"
           />
         </div>
-        <div className="field">
-          <label htmlFor="moonMonthInput">Month</label>
-          <input
-            type="number"
-            id="moonMonthInput"
-            value={month}
-            min="1"
-            max="12"
-            onChange={(e) => setMonth(e.target.value)}
-          />
-        </div>
-        <button className="btn" onClick={handleSearch} disabled={loading}>
-          {loading ? 'Loading...' : 'Fetch Cycles'}
+        <button className="btn" onClick={() => fetchCycleData(year)} disabled={loading}>
+          {loading ? 'Computing…' : 'Compute Cycle'}
         </button>
       </div>
 
-      <div id="moon-results">
-        {error && <div className="error-msg">{error}</div>}
+      {error && <div className="error-msg">{error}</div>}
 
-        {data && data.days && (
-          <>
-            <p className="results-header">
-              Moon Phases for {data.month_name} {data.year}
-            </p>
-            <div className="moon-grid">
-              {data.days.map((day, i) => (
-                <div className="eclipse-card" key={i}>
-                  {day.moon_visual && day.moon_visual.svg && (
-                    <div
-                      className="moon-phase-svg"
-                      dangerouslySetInnerHTML={{ __html: day.moon_visual.svg }}
-                    />
-                  )}
-                  <div className="card-content">
-                    <div className="card-date">{day.calendar_date}</div>
-                    <span className="badge badge-lunar">{day.phase.name}</span>
-                    <span className="badge badge-kind">
-                      {Math.round(day.phase.illumination * 100)}% Illum.
-                    </span>
-                  </div>
-                </div>
-              ))}
+      {loading && (
+        <div className="empty-msg">Computing lunar events — this takes a moment…</div>
+      )}
+
+      {data && data.events && (
+        <div className="cycle-wrap">
+          <p className="results-header">
+            Double Lunar Cycle {data.year} &mdash; {data.count} events &middot; times in UTC
+          </p>
+          <div className="cycle-table">
+            <div className="cycle-head">
+              <span>Date</span>
+              <span>Body</span>
+              <span>Phenomenon</span>
+              <span>Ref.</span>
+              <span>Note</span>
             </div>
-          </>
-        )}
-      </div>
+            {data.events.map((e, i) => {
+              const d    = new Date(e.date);
+              const dd   = String(d.getUTCDate()).padStart(2, '0');
+              const mm   = String(d.getUTCMonth() + 1).padStart(2, '0');
+              const yyyy = d.getUTCFullYear();
+              return (
+                <div className="cycle-row" key={i}>
+                  <span className="cycle-date">{`${dd}-${mm}-${yyyy}`}</span>
+                  <span className="cycle-muted">{e.body}</span>
+                  <span className={PHENOM_CLASS[e.phenomenon] || ''}>{e.phenomenon}</span>
+                  <span className="cycle-muted">{e.ref}</span>
+                  <span className="cycle-note">{e.note}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </>
   );
 }

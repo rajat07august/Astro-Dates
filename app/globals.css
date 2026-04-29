@@ -315,6 +315,66 @@ h1 {
   color: var(--muted);
 }
 
+/* ── Double Lunar Cycle Table ── */
+.cycle-wrap {
+  overflow-x: auto;
+}
+
+.cycle-table {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface);
+  backdrop-filter: blur(12px) saturate(180%);
+}
+
+.cycle-head,
+.cycle-row {
+  display: grid;
+  grid-template-columns: 110px 56px 1fr 52px 170px;
+  align-items: center;
+}
+
+.cycle-head {
+  padding: 12px 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.cycle-head span,
+.cycle-row span {
+  padding: 0 6px;
+}
+
+.cycle-row {
+  padding: 9px 20px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s;
+}
+
+.cycle-row:last-child { border-bottom: none; }
+.cycle-row:hover { background: rgba(255, 255, 255, 0.03); }
+
+.cycle-date { font-variant-numeric: tabular-nums; }
+.cycle-muted { color: var(--muted); }
+.cycle-note  { font-variant-numeric: tabular-nums; font-size: 0.82rem; color: var(--muted); }
+
+/* Phenomenon colour coding */
+.phenom-perigee    { color: #ffb300; }
+.phenom-apogee     { color: #ffd54f; }
+.phenom-new-moon   { color: #9fa8da; }
+.phenom-full-moon  { color: #e8eaf6; }
+.phenom-eq-north   { color: #4fc3f7; }
+.phenom-eq-south   { color: #f48fb1; }
+.phenom-eq-passage { color: #a5d6a7; }
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   h1 { font-size: 1.8rem; }
@@ -322,4 +382,10 @@ h1 {
   .btn { width: 100%; text-align: center; }
   .eclipse-card { padding: 18px; gap: 14px; }
   .orb { width: 40px; height: 40px; }
+  .cycle-head,
+  .cycle-row {
+    grid-template-columns: 88px 44px 1fr 36px auto;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
 }
