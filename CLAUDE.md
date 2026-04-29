@@ -1,5 +1,17 @@
 # Celestial Eclipse Finder — Project Status
 
+## Branching Rules
+
+**All development work must be done on the `dev` branch.**
+Only merge into `main` when a feature is complete and tested.
+Never commit directly to `main`.
+
+```
+dev   ← all new work goes here
+ |
+ └──► main  (merge only when ready to ship)
+```
+
 ## Architecture
 
 Migrated from a single `index.html` to a **Next.js App Router** structure:
@@ -13,8 +25,8 @@ Migrated from a single `index.html` to a **Next.js App Router** structure:
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Initial Next.js boilerplate |
-| `dev`  | Active development — Moon Cycles feature |
+| `main` | Stable, production-ready code only |
+| `dev`  | Active development — all changes land here first |
 
 ## Moon Cycles Tab (dev branch)
 
