@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Celestial Eclipse Finder (Offline)</title>
+  <style>
+    :root {
+      --bg:           #050512;
+      --surface:      rgba(15, 15, 42, 0.7);
+      --border:       rgba(255, 255, 255, 0.1);
+      --border-hover: rgba(255, 255, 255, 0.2);
+      --text:         #e8eaf6;
+      --muted:        #9fa8da;
+      --accent:       #7986cb;
+      --solar:        #ffb300;
+      --lunar:        #9fa8da;
+      --glass:        backdrop-filter: blur(12px) saturate(180%);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .nebula {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(121, 134, 203, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(255, 179, 0, 0.1) 0%, transparent 40%);
+      z-index: -1;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: url('https://www.transparenttextures.com/patterns/stardust.png');
+      opacity: 0.3;
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 60px 20px;
+    }
+
+    header { text-align: center; margin-bottom: 50px; }
+    h1 { font-size: 2.5rem; font-weight: 800; background: linear-gradient(135deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: var(--muted); }
+
+    .search-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      gap: 15px;
+      align-items: flex-end;
+      margin-bottom: 40px;
+      var(--glass);
+    }
+
+    .field { flex: 1; }
+    .field label { display: block; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    input[type="number"] { width: 100%; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); border-radius: 12px; color: #fff; font-size: 1.2rem; padding: 12px 18px; outline: none; }
+    .btn { background: linear-gradient(135deg, #ffb300, #ff6f00); color: #1a0a00; border: none; border-radius: 12px; padding: 14px 28px; font-weight: 700; cursor: pointer; }
+
+    .eclipse-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      var(--glass);
+    }
+
+    .orb { width: 48px; height: 48px; border-radius: 50%; }
+    .orb-solar { background: radial-gradient(circle, #000 40%, #ffb300 70%); box-shadow: 0 0 15px #ffb300; }
+    .orb-lunar { background: radial-gradient(circle, #7f0000 30%, #e53935 90%); box-shadow: 0 0 15px #e53935; }
+
+    .card-content { flex: 1; }
+    .card-date { font-size: 1.1rem; font-weight: 700; }
+    .badge { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; padding: 3px 10px; border-radius: 6px; margin-top: 5px; display: inline-block; }
+    .badge-solar { background: rgba(255, 179, 0, 0.1); color: var(--solar); border: 1px solid rgba(255,179,0,0.2); }
+    .badge-lunar { background: rgba(121, 134, 203, 0.1); color: var(--lunar); border: 1px solid rgba(121,134,203,0.2); }
+
+    .btn:hover { background: linear-gradient(135deg, #ffca28, #f57c00); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 179, 0, 0.3); transition: all 0.3s ease; }
+    .btn:active { transform: translateY(0); }
+
+    .eclipse-card:hover { border-color: var(--border-hover); transform: translateX(5px); transition: all 0.3s ease; }
+
+    .error-msg { text-align: center; padding: 2rem; color: #ff5252; background: rgba(255, 82, 82, 0.1); border-radius: 12px; border: 1px solid rgba(255, 82, 82, 0.2); }
+  </style>
+</head>
+<body>
+
+<div class="nebula"></div>
+<div class="stars"></div>
+
+<div class="container">
+  <header>
+    <h1>Eclipse Finder</h1>
+    <p class="subtitle">Search 2008 – 2060 (Offline Mode)</p>
+  </header>
+
+  <div class="search-card">
+    <div class="field">
+      <label for="yearInput">Year</label>
+      <input type="number" id="yearInput" value="2024" min="2008" max="2060">
+    </div>
+    <button class="btn" onclick="search()">Search</button>
+  </div>
+
+  <div id="results"></div>
+</div>
+
+<script>
+  // Hardcoded Eclipse Data for 100% Reliability
+  const ECLIPSES = [
+    { date: "2008 Feb 07", type: "Solar", kind: "Annular" },
+    { date: "2008 Aug 01", type: "Solar", kind: "Total" },
+    { date: "2008 Aug 16", type: "Lunar", kind: "Partial" },
+    { date: "2009 Jan 26", type: "Solar", kind: "Annular" },
+    { date: "2009 Feb 09", type: "Lunar", kind: "Penumbral" },
+    { date: "2009 Jul 07", type: "Lunar", kind: "Penumbral" },
+    { date: "2009 Jul 22", type: "Solar", kind: "Total" },
+    { date: "2009 Aug 06", type: "Lunar", kind: "Penumbral" },
+    { date: "2009 Dec 31", type: "Lunar", kind: "Partial" },
+    { date: "2010 Jan 15", type: "Solar", kind: "Annular" },
+    { date: "2010 Jun 26", type: "Lunar", kind: "Partial" },
+    { date: "2010 Jul 11", type: "Solar", kind: "Total" },
+    { date: "2010 Dec 21", type: "Lunar", kind: "Total" },
+    { date: "2011 Jan 04", type: "Solar", kind: "Partial" },
+    { date: "2011 Jun 01", type: "Solar", kind: "Partial" },
+    { date: "2011 Jun 15", type: "Lunar", kind: "Total" },
+    { date: "2011 Jul 01", type: "Solar", kind: "Partial" },
+    { date: "2011 Nov 25", type: "Solar", kind: "Partial" },
+    { date: "2012 May 20", type: "Solar", kind: "Annular" },
+    { date: "2012 Jun 04", type: "Lunar", kind: "Partial" },
+    { date: "2012 Nov 13", type: "Solar", kind: "Total" },
+    { date: "2012 Nov 28", type: "Lunar", kind: "Penumbral" },
+    { date: "2013 Apr 25", type: "Lunar", kind: "Partial" },
+    { date: "2013 May 10", type: "Solar", kind: "Annular" },
+    { date: "2013 May 25", type: "Lunar", kind: "Penumbral" },
+    { date: "2013 Nov 03", type: "Solar", kind: "Partial" },
+    { date: "2014 Apr 15", type: "Lunar", kind: "Total" },
+    { date: "2014 Oct 08", type: "Lunar", kind: "Total" },
+    { date: "2015 Mar 20", type: "Solar", kind: "Total" },
+    { date: "2015 Apr 04", type: "Lunar", kind: "Total" },
+    { date: "2015 Sep 13", type: "Solar", kind: "Partial" },
+    { date: "2015 Sep 28", type: "Lunar", kind: "Total" },
+    { date: "2016 Mar 09", type: "Solar", kind: "Total" },
+    { date: "2016 Mar 23", type: "Lunar", kind: "Penumbral" },
+    { date: "2016 Sep 01", type: "Solar", kind: "Annular" },
+    { date: "2016 Sep 16", type: "Lunar", kind: "Penumbral" },
+    { date: "2017 Feb 11", type: "Lunar", kind: "Penumbral" },
+    { date: "2017 Feb 26", type: "Solar", kind: "Annular" },
+    { date: "2017 Aug 07", type: "Lunar", kind: "Partial" },
+    { date: "2017 Aug 21", type: "Solar", kind: "Total" },
+    { date: "2018 Jan 31", type: "Lunar", kind: "Total" },
+    { date: "2018 Feb 15", type: "Solar", kind: "Partial" },
+    { date: "2018 Jul 13", type: "Solar", kind: "Partial" },
+    { date: "2018 Jul 27", type: "Lunar", kind: "Total" },
+    { date: "2018 Aug 11", type: "Solar", kind: "Partial" },
+    { date: "2019 Jan 06", type: "Solar", kind: "Partial" },
+    { date: "2019 Jul 02", type: "Solar", kind: "Total" },
+    { date: "2019 Jul 16", type: "Lunar", kind: "Partial" },
+    { date: "2019 Dec 26", type: "Solar", kind: "Annular" },
+    { date: "2020 Jan 10", type: "Lunar", kind: "Penumbral" },
+    { date: "2020 Jun 05", type: "Lunar", kind: "Penumbral" },
+    { date: "2020 Jun 21", type: "Solar", kind: "Total" },
+    { date: "2020 Jul 05", type: "Lunar", kind: "Penumbral" },
+    { date: "2020 Nov 30", type: "Lunar", kind: "Penumbral" },
+    { date: "2021 May 26", type: "Lunar", kind: "Total" },
+    { date: "2021 Jun 10", type: "Solar", kind: "Annular" },
+    { date: "2021 Nov 19", type: "Lunar", kind: "Partial" },
+    { date: "2021 Dec 04", type: "Solar", kind: "Total" },
+    { date: "2022 Apr 30", type: "Solar", kind: "Partial" },
+    { date: "2022 Oct 25", type: "Solar", kind: "Partial" },
+    { date: "2022 Nov 08", type: "Lunar", kind: "Penumbral" },
+    { date: "2023 Apr 20", type: "Solar", kind: "Hybrid" },
+    { date: "2023 Oct 14", type: "Solar", kind: "Annular" },
+    { date: "2023 Oct 28", type: "Lunar", kind: "Partial" },
+    { date: "2024 Mar 25", type: "Lunar", kind: "Penumbral" },
+    { date: "2024 Apr 08", type: "Solar", kind: "Total" },
+    { date: "2024 Sep 18", type: "Lunar", kind: "Partial" },
+    { date: "2024 Oct 02", type: "Solar", kind: "Annular" },
+    { date: "2025 Mar 14", type: "Lunar", kind: "Total" },
+    { date: "2025 Mar 29", type: "Solar", kind: "Partial" },
+    { date: "2025 Sep 07", type: "Lunar", kind: "Total" },
+    { date: "2025 Sep 21", type: "Solar", kind: "Partial" },
+    { date: "2026 Feb 17", type: "Solar", kind: "Annular" },
+    { date: "2026 Mar 03", type: "Lunar", kind: "Total" },
+    { date: "2026 Aug 12", type: "Solar", kind: "Total" },
+    { date: "2026 Aug 28", type: "Lunar", kind: "Partial" },
+    { date: "2027 Feb 06", type: "Solar", kind: "Annular" },
+    { date: "2027 Feb 20", type: "Lunar", kind: "Penumbral" },
+    { date: "2027 Jul 18", type: "Lunar", kind: "Penumbral" },
+    { date: "2027 Aug 02", type: "Solar", kind: "Total" },
+    { date: "2028 Jan 12", type: "Lunar", kind: "Partial" },
+    { date: "2028 Jan 26", type: "Solar", kind: "Annular" },
+    { date: "2028 Jul 06", type: "Lunar", kind: "Partial" },
+    { date: "2028 Jul 22", type: "Solar", kind: "Total" },
+    { date: "2028 Dec 31", type: "Lunar", kind: "Total" },
+    { date: "2029 Jan 14", type: "Solar", kind: "Partial" },
+    { date: "2029 Jun 12", type: "Solar", kind: "Partial" },
+    { date: "2029 Jun 26", type: "Lunar", kind: "Total" },
+    { date: "2029 Jul 11", type: "Solar", kind: "Partial" },
+    { date: "2029 Dec 05", type: "Solar", kind: "Partial" },
+    { date: "2030 Jun 01", type: "Solar", kind: "Annular" },
+    { date: "2030 Jun 15", type: "Lunar", kind: "Partial" },
+    { date: "2030 Nov 25", type: "Solar", kind: "Total" },
+    { date: "2030 Dec 09", type: "Lunar", kind: "Penumbral" },
+    { date: "2031 May 07", type: "Lunar", kind: "Penumbral" },
+    { date: "2031 May 21", type: "Solar", kind: "Annular" },
+    { date: "2031 Jun 05", type: "Lunar", kind: "Penumbral" },
+    { date: "2031 Oct 30", type: "Lunar", kind: "Penumbral" },
+    { date: "2031 Nov 14", type: "Solar", kind: "Hybrid" },
+    { date: "2032 Apr 25", type: "Lunar", kind: "Total" },
+    { date: "2032 May 09", type: "Solar", kind: "Annular" },
+    { date: "2032 Oct 18", type: "Lunar", kind: "Total" },
+    { date: "2032 Nov 03", type: "Solar", kind: "Partial" },
+    { date: "2033 Mar 30", type: "Solar", kind: "Total" },
+    { date: "2033 Apr 14", type: "Lunar", kind: "Total" },
+    { date: "2033 Sep 23", type: "Solar", kind: "Partial" },
+    { date: "2033 Oct 08", type: "Lunar", kind: "Total" },
+    { date: "2034 Mar 20", type: "Solar", kind: "Total" },
+    { date: "2034 Apr 03", type: "Lunar", kind: "Penumbral" },
+    { date: "2034 Sep 12", type: "Solar", kind: "Annular" },
+    { date: "2034 Sep 28", type: "Lunar", kind: "Partial" },
+    { date: "2035 Feb 22", type: "Lunar", kind: "Penumbral" },
+    { date: "2035 Mar 09", type: "Solar", kind: "Annular" },
+    { date: "2035 Aug 19", type: "Lunar", kind: "Partial" },
+    { date: "2035 Sep 02", type: "Solar", kind: "Total" },
+    { date: "2036 Feb 11", type: "Lunar", kind: "Total" },
+    { date: "2036 Feb 27", type: "Solar", kind: "Partial" },
+    { date: "2036 Jul 23", type: "Solar", kind: "Partial" },
+    { date: "2036 Aug 07", type: "Lunar", kind: "Total" },
+    { date: "2036 Aug 21", type: "Solar", kind: "Partial" },
+    { date: "2037 Jan 16", type: "Solar", kind: "Partial" },
+    { date: "2037 Jul 13", type: "Solar", kind: "Total" },
+    { date: "2037 Jul 27", type: "Lunar", kind: "Partial" },
+    { date: "2038 Jan 05", type: "Solar", kind: "Annular" },
+    { date: "2038 Jan 21", type: "Lunar", kind: "Penumbral" },
+    { date: "2038 Jun 17", type: "Lunar", kind: "Penumbral" },
+    { date: "2038 Jul 02", type: "Solar", kind: "Annular" },
+    { date: "2038 Jul 16", type: "Lunar", kind: "Penumbral" },
+    { date: "2038 Dec 11", type: "Lunar", kind: "Penumbral" },
+    { date: "2038 Dec 26", type: "Solar", kind: "Total" },
+    { date: "2039 Jun 06", type: "Lunar", kind: "Partial" },
+    { date: "2039 Jun 21", type: "Solar", kind: "Annular" },
+    { date: "2039 Nov 30", type: "Lunar", kind: "Partial" },
+    { date: "2039 Dec 15", type: "Solar", kind: "Total" },
+    { date: "2040 May 11", type: "Solar", kind: "Partial" },
+    { date: "2040 May 26", type: "Lunar", kind: "Partial" },
+    { date: "2040 Nov 04", type: "Solar", kind: "Partial" },
+    { date: "2041 Apr 30", type: "Solar", kind: "Total" },
+    { date: "2041 Oct 25", type: "Solar", kind: "Annular" },
+    { date: "2041 Nov 08", type: "Lunar", kind: "Partial" },
+    { date: "2042 Apr 05", type: "Lunar", kind: "Penumbral" },
+    { date: "2042 Apr 20", type: "Solar", kind: "Total" },
+    { date: "2042 Sep 29", type: "Lunar", kind: "Penumbral" },
+    { date: "2042 Oct 14", type: "Solar", kind: "Annular" },
+    { date: "2043 Mar 25", type: "Lunar", kind: "Total" },
+    { date: "2043 Apr 09", type: "Solar", kind: "Total" },
+    { date: "2043 Sep 19", type: "Lunar", kind: "Total" },
+    { date: "2044 Mar 13", type: "Lunar", kind: "Total" },
+    { date: "2044 Sep 07", type: "Lunar", kind: "Total" },
+    { date: "2045 Feb 16", type: "Solar", kind: "Annular" },
+    { date: "2045 Mar 03", type: "Lunar", kind: "Penumbral" },
+    { date: "2045 Aug 12", type: "Solar", kind: "Total" },
+    { date: "2045 Aug 27", type: "Lunar", kind: "Penumbral" },
+    { date: "2046 Jan 22", type: "Lunar", kind: "Partial" },
+    { date: "2046 Feb 05", type: "Solar", kind: "Annular" },
+    { date: "2046 Jul 18", type: "Lunar", kind: "Partial" },
+    { date: "2046 Aug 02", type: "Solar", kind: "Total" },
+    { date: "2047 Jan 12", type: "Lunar", kind: "Total" },
+    { date: "2047 Jan 26", type: "Solar", kind: "Partial" },
+    { date: "2047 Jun 23", type: "Solar", kind: "Partial" },
+    { date: "2047 Jul 07", type: "Lunar", kind: "Total" },
+    { date: "2047 Jul 22", type: "Solar", kind: "Partial" },
+    { date: "2047 Dec 16", type: "Solar", kind: "Partial" },
+    { date: "2048 Jun 11", type: "Solar", kind: "Annular" },
+    { date: "2048 Jun 26", type: "Lunar", kind: "Partial" },
+    { date: "2048 Dec 05", type: "Solar", kind: "Total" },
+    { date: "2048 Dec 20", type: "Lunar", kind: "Penumbral" },
+    { date: "2049 May 17", type: "Lunar", kind: "Penumbral" },
+    { date: "2049 May 31", type: "Solar", kind: "Annular" },
+    { date: "2049 Jun 15", type: "Lunar", kind: "Penumbral" },
+    { date: "2049 Nov 09", type: "Lunar", kind: "Penumbral" },
+    { date: "2049 Nov 25", type: "Solar", kind: "Hybrid" },
+    { date: "2050 May 06", type: "Lunar", kind: "Total" },
+    { date: "2050 May 20", type: "Solar", kind: "Hybrid" },
+    { date: "2050 Oct 30", type: "Lunar", kind: "Total" },
+    { date: "2050 Nov 14", type: "Solar", kind: "Partial" },
+    { date: "2051 Apr 11", type: "Solar", kind: "Partial" },
+    { date: "2051 Apr 26", type: "Lunar", kind: "Total" },
+    { date: "2051 Oct 04", type: "Solar", kind: "Partial" },
+    { date: "2051 Oct 19", type: "Lunar", kind: "Penumbral" },
+    { date: "2052 Mar 30", type: "Solar", kind: "Total" },
+    { date: "2052 Sep 22", type: "Solar", kind: "Annular" },
+    { date: "2052 Oct 08", type: "Lunar", kind: "Partial" },
+    { date: "2053 Mar 04", type: "Lunar", kind: "Penumbral" },
+    { date: "2053 Mar 20", type: "Solar", kind: "Annular" },
+    { date: "2053 Aug 29", type: "Lunar", kind: "Penumbral" },
+    { date: "2053 Sep 12", type: "Solar", kind: "Total" },
+    { date: "2054 Feb 22", type: "Lunar", kind: "Total" },
+    { date: "2054 Mar 09", type: "Solar", kind: "Partial" },
+    { date: "2054 Aug 03", type: "Solar", kind: "Partial" },
+    { date: "2054 Aug 18", type: "Lunar", kind: "Total" },
+    { date: "2054 Sep 02", type: "Solar", kind: "Partial" },
+    { date: "2055 Jan 27", type: "Solar", kind: "Partial" },
+    { date: "2055 Feb 11", type: "Lunar", kind: "Total" },
+    { date: "2055 Jul 24", type: "Solar", kind: "Total" },
+    { date: "2055 Aug 07", type: "Lunar", kind: "Partial" },
+    { date: "2056 Jan 16", type: "Solar", kind: "Annular" },
+    { date: "2056 Feb 01", type: "Lunar", kind: "Penumbral" },
+    { date: "2056 Jun 27", type: "Lunar", kind: "Penumbral" },
+    { date: "2056 Jul 12", type: "Solar", kind: "Annular" },
+    { date: "2056 Jul 26", type: "Lunar", kind: "Penumbral" },
+    { date: "2056 Dec 22", type: "Lunar", kind: "Penumbral" },
+    { date: "2057 Jan 05", type: "Solar", kind: "Total" },
+    { date: "2057 Jun 17", type: "Lunar", kind: "Partial" },
+    { date: "2057 Jul 01", type: "Solar", kind: "Annular" },
+    { date: "2057 Dec 11", type: "Lunar", kind: "Partial" },
+    { date: "2057 Dec 26", type: "Solar", kind: "Total" },
+    { date: "2058 May 22", type: "Solar", kind: "Partial" },
+    { date: "2058 Jun 06", type: "Lunar", kind: "Partial" },
+    { date: "2058 Jun 21", type: "Solar", kind: "Partial" },
+    { date: "2058 Nov 16", type: "Solar", kind: "Partial" },
+    { date: "2059 May 11", type: "Solar", kind: "Total" },
+    { date: "2059 Nov 05", type: "Solar", kind: "Annular" },
+    { date: "2059 Nov 19", type: "Lunar", kind: "Partial" },
+    { date: "2060 Apr 15", type: "Lunar", kind: "Penumbral" },
+    { date: "2060 Apr 30", type: "Solar", kind: "Total" },
+    { date: "2060 Oct 09", type: "Lunar", kind: "Penumbral" },
+    { date: "2060 Oct 24", type: "Solar", kind: "Annular" },
+    { date: "2060 Nov 08", type: "Lunar", kind: "Penumbral" },
+  ];
+
+  function search() {
+    const yearInput = document.getElementById('yearInput').value;
+    const year = yearInput.trim();
+    const output = document.getElementById('results');
+
+    if (!/^\d{4}$/.test(year)) {
+      output.innerHTML = `<div class="error-msg">Please enter a valid 4-digit year (e.g., 2024).</div>`;
+      return;
+    }
+
+    const filtered = ECLIPSES.filter(e => e.date.startsWith(year));
+
+    if (filtered.length === 0) {
+      output.innerHTML = `<p style="text-align:center; padding: 2rem; color: var(--muted);">No eclipses found for ${year}. Data available for 2008–2060.</p>`;
+      return;
+    }
+
+    output.innerHTML = filtered.map(e => `
+      <div class="eclipse-card">
+        <div class="orb orb-${e.type.toLowerCase()}"></div>
+        <div class="card-content">
+          <div class="card-date">${e.date}</div>
+          <span class="badge badge-${e.type.toLowerCase()}">${e.type} Eclipse</span>
+          <span class="badge" style="background:rgba(255,255,255,0.05); color: #fff;">${e.kind}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Handle Enter key
+  document.getElementById('yearInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+      search();
+    }
+  });
+
+  window.onload = search;
+</script>
+</body>
+</html>
