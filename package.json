@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "astronomy-engine": "^2.1.19",
     "next": "^15.3.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
