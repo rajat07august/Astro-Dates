@@ -10,7 +10,7 @@ export default function Home() {
     <div className="container">
       <header>
         <h1>Celestial Dashboard</h1>
-        <p className="subtitle">Explore Eclipses & Moon Cycles · Powered by NASA & FreeAstroAPI</p>
+        <p className="subtitle">Explore Eclipses, Moon Cycles &amp; Planet Events · Powered by astronomy-engine</p>
       </header>
 
       <div className="tabs">
@@ -26,10 +26,17 @@ export default function Home() {
         >
           Moon Cycles
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'planets' ? 'active' : ''}`}
+          onClick={() => setActiveTab('planets')}
+        >
+          Planet Events
+        </button>
       </div>
 
       {activeTab === 'eclipses' && <EclipseView />}
       {activeTab === 'moon' && <MoonCycleView />}
+      {activeTab === 'planets' && <PlanetEventsView />}
     </div>
   );
 }
@@ -121,6 +128,118 @@ function EclipseView() {
           </>
         )}
       </div>
+    </>
+  );
+}
+
+function PlanetEventsView() {
+  const [year, setYear] = useState('');
+  const [includeMoon, setIncludeMoon] = useState(false);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const y = new Date().getFullYear().toString();
+    setYear(y);
+    fetchData(y, false);
+  }, []);
+
+  async function fetchData(y, moon) {
+    if (!y) return;
+    setLoading(true);
+    setError('');
+    setData(null);
+    try {
+      const res  = await fetch(`/api/planet-events?year=${y}&moon=${moon ? '1' : '0'}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Computation failed');
+      setData(json);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const PLANET_CLASS = {
+    Sun: 'planet-sun', Mercury: 'planet-mercury', Venus: 'planet-venus',
+    Mars: 'planet-mars', Jupiter: 'planet-jupiter', Saturn: 'planet-saturn',
+    Moon: 'planet-moon',
+  };
+
+  const EVENT_CLASS = {
+    'I': 'event-ingress', 'R': 'event-retro', 'S/D': 'event-direct',
+  };
+
+  return (
+    <>
+      <div className="search-card">
+        <div className="field">
+          <label htmlFor="planetYearInput">Year</label>
+          <input
+            type="number"
+            id="planetYearInput"
+            value={year}
+            min="1900"
+            max="2100"
+            onChange={(e) => setYear(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && fetchData(year, includeMoon)}
+            placeholder="e.g. 2026"
+          />
+        </div>
+        <div className="field-check">
+          <label className="check-label">
+            <input
+              type="checkbox"
+              checked={includeMoon}
+              onChange={(e) => setIncludeMoon(e.target.checked)}
+            />
+            Include Moon
+          </label>
+        </div>
+        <button className="btn" onClick={() => fetchData(year, includeMoon)} disabled={loading}>
+          {loading ? 'Computing…' : 'Compute Events'}
+        </button>
+      </div>
+
+      {error && <div className="error-msg">{error}</div>}
+
+      {loading && (
+        <div className="empty-msg">Computing planetary events — this takes a moment…</div>
+      )}
+
+      {data && data.events && (
+        <div className="cycle-wrap">
+          <p className="results-header">
+            Planet Events {data.year} &mdash; {data.count} events &middot; times in UTC
+          </p>
+          <div className="cycle-table">
+            <div className="planet-head">
+              <span>Date</span>
+              <span>Planet</span>
+              <span>Sign &amp; Event</span>
+            </div>
+            {data.events.map((e, i) => {
+              const d    = new Date(e.date);
+              const dd   = String(d.getUTCDate()).padStart(2, '0');
+              const mm   = String(d.getUTCMonth() + 1).padStart(2, '0');
+              const yyyy = d.getUTCFullYear();
+              return (
+                <div className="planet-row" key={i}>
+                  <span className="cycle-date">{`${dd}-${mm}-${yyyy}`}</span>
+                  <span className={PLANET_CLASS[e.planet] || 'cycle-muted'}>{e.planet}</span>
+                  <span>
+                    <span className="cycle-muted">{e.sign}</span>
+                    {' — '}
+                    <span className={`event-badge ${EVENT_CLASS[e.event] || ''}`}>{e.event}</span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </>
   );
 }

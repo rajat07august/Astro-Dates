@@ -375,6 +375,103 @@ h1 {
 .phenom-eq-south   { color: #f48fb1; }
 .phenom-eq-passage { color: #a5d6a7; }
 
+/* ── Planet Events Table ── */
+.planet-head,
+.planet-row {
+  display: grid;
+  grid-template-columns: 110px 100px 1fr;
+  align-items: center;
+}
+
+.planet-head {
+  padding: 12px 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.planet-head span,
+.planet-row span {
+  padding: 0 6px;
+}
+
+.planet-row {
+  padding: 9px 20px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s;
+}
+
+.planet-row:last-child { border-bottom: none; }
+.planet-row:hover { background: rgba(255, 255, 255, 0.03); }
+
+/* Planet name colours */
+.planet-sun     { color: #ffb300; font-weight: 600; }
+.planet-moon    { color: #b0bec5; font-weight: 600; }
+.planet-mercury { color: #4dd0e1; font-weight: 600; }
+.planet-venus   { color: #f48fb1; font-weight: 600; }
+.planet-mars    { color: #ef5350; font-weight: 600; }
+.planet-jupiter { color: #ff8f00; font-weight: 600; }
+.planet-saturn  { color: #9575cd; font-weight: 600; }
+
+/* Event type badges */
+.event-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.event-ingress {
+  background: rgba(76, 175, 80, 0.12);
+  color: #66bb6a;
+  border: 1px solid rgba(76, 175, 80, 0.25);
+}
+
+.event-retro {
+  background: rgba(239, 83, 80, 0.12);
+  color: #ef9a9a;
+  border: 1px solid rgba(239, 83, 80, 0.25);
+}
+
+.event-direct {
+  background: rgba(66, 165, 245, 0.12);
+  color: #90caf9;
+  border: 1px solid rgba(66, 165, 245, 0.25);
+}
+
+/* Moon toggle checkbox */
+.field-check {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 14px;
+}
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.check-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   h1 { font-size: 1.8rem; }
@@ -385,6 +482,12 @@ h1 {
   .cycle-head,
   .cycle-row {
     grid-template-columns: 88px 44px 1fr 36px auto;
+    padding: 8px 12px;
+    font-size: 0.78rem;
+  }
+  .planet-head,
+  .planet-row {
+    grid-template-columns: 88px 80px 1fr;
     padding: 8px 12px;
     font-size: 0.78rem;
   }
