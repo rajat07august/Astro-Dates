@@ -472,6 +472,179 @@ h1 {
   cursor: pointer;
 }
 
+/* ── Planet Events: key-pair highlight ── */
+.planet-row-key {
+  background: rgba(255, 179, 0, 0.06);
+  border-left: 3px solid rgba(255, 179, 0, 0.6);
+}
+
+.planet-row-key:hover {
+  background: rgba(255, 179, 0, 0.1);
+}
+
+.key-badge {
+  font-size: 0.6rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255, 179, 0, 0.15);
+  color: #ffb300;
+  border: 1px solid rgba(255, 179, 0, 0.3);
+  margin-left: 6px;
+  vertical-align: middle;
+  letter-spacing: 0.05em;
+}
+
+/* ── Market Signals Tab ── */
+.ms-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.ms-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  margin-bottom: 14px;
+  -webkit-text-fill-color: var(--muted);
+  background: none;
+}
+
+/* Moon phase cards */
+.ms-moon-cards {
+  display: flex;
+  gap: 16px;
+}
+
+.ms-moon-card {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  backdrop-filter: blur(12px) saturate(180%);
+}
+
+.ms-moon-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.ms-moon-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.ms-moon-val {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.ms-moon-pos { border-color: rgba(102, 187, 106, 0.35); }
+.ms-moon-pos .ms-moon-icon { color: #e8eaf6; }
+.ms-moon-pos .ms-moon-val  { color: #66bb6a; }
+
+.ms-moon-neg { border-color: rgba(239, 83, 80, 0.35); }
+.ms-moon-neg .ms-moon-icon { color: #9fa8da; }
+.ms-moon-neg .ms-moon-val  { color: #ef9a9a; }
+
+/* Element table */
+.ms-elem-head,
+.ms-elem-row {
+  display: grid;
+  grid-template-columns: 90px 80px 1fr 1fr;
+  align-items: center;
+}
+
+.ms-elem-head {
+  padding: 12px 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.ms-elem-head span,
+.ms-elem-row span {
+  padding: 0 6px;
+}
+
+.ms-elem-row {
+  padding: 11px 20px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s;
+}
+
+.ms-elem-row:last-child { border-bottom: none; }
+.ms-elem-row:hover { background: rgba(255, 255, 255, 0.03); }
+
+.ms-sentiment { font-weight: 700; }
+.ms-element   { color: var(--muted); }
+.ms-direction { font-weight: 600; }
+
+.ms-fire  .ms-sentiment { color: #ff7043; }
+.ms-fire  .ms-direction { color: #ff8a65; }
+.ms-earth .ms-sentiment { color: #66bb6a; }
+.ms-earth .ms-direction { color: #81c784; }
+.ms-air   .ms-sentiment { color: #4fc3f7; }
+.ms-air   .ms-direction { color: #81d4fa; }
+.ms-water .ms-sentiment { color: #ef9a9a; }
+.ms-water .ms-direction { color: #ef9a9a; }
+
+/* Sector table */
+.ms-sector-head,
+.ms-sector-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+}
+
+.ms-sector-head {
+  padding: 12px 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.ms-sector-head span,
+.ms-sector-row span {
+  padding: 0 6px;
+}
+
+.ms-sector-row {
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.15s;
+}
+
+.ms-sector-row:last-child { border-bottom: none; }
+.ms-sector-row:hover { background: rgba(255, 255, 255, 0.03); }
+
+.ms-sector-val { color: var(--text); }
+
+/* Rahu / Ketu (shadow nodes — no planet-* class) */
+.planet-rahu { color: #80cbc4; font-weight: 600; }
+.planet-ketu { color: #ce93d8; font-weight: 600; }
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   h1 { font-size: 1.8rem; }
