@@ -16,10 +16,12 @@ dev   ← all new work goes here
 
 Migrated from a single `index.html` to a **Next.js App Router** structure:
 
-- `app/page.js` — main tabbed UI (Solar & Lunar Eclipses tab + Moon Cycles tab)
+- `app/page.js` — main tabbed UI (3 tabs: Eclipses, Moon Cycles, Planet Events)
 - `app/layout.js` — root layout
 - `app/globals.css` — global styles
 - `data/eclipses.js` — exportable hardcoded eclipse dataset (2008–2060)
+- `lib/moonCycle.js` — Double Lunar Cycle computation (astronomy-engine)
+- `lib/planetEvents.js` — Planetary ingress/retrograde/direct computation (astronomy-engine)
 
 ## Branches
 
@@ -28,18 +30,40 @@ Migrated from a single `index.html` to a **Next.js App Router** structure:
 | `main` | Stable, production-ready code only |
 | `dev`  | Active development — all changes land here first |
 
-## Moon Cycles Tab (dev branch)
+## Tab 1 — Solar & Lunar Eclipses
 
-- **API proxy route:** `app/api/moon/route.js` — server-side proxy for `freeastroapi.com` `/api/v1/moon/month` endpoint.
-- **API key:** stored in `.env` as `API_KEY`; never exposed to the client.
-- **Component:** `<MoonCycleView />` inside `app/page.js` — accepts year/month inputs, fetches from the internal route, renders daily moon phase cards with dynamic SVG visuals, phase name, and illumination %.
+- Data source: hardcoded dataset in `data/eclipses.js` (2008–2060)
+- Year input → filters and displays eclipse cards with type (Solar/Lunar) and kind
+
+## Tab 2 — Moon Cycles
+
+- **API route:** `app/api/moon-cycle/route.js`
+- **Computation:** `lib/moonCycle.js` using `astronomy-engine`
+- **Events computed:** Perigee, Apogee, New Moon, Full Moon, Equatorial Passage, Equatorial Farthest North/South
+- **Input:** year (1900–2100); returns ~106 events per year
+- No external API or API key required
+
+## Tab 3 — Planet Events
+
+- **API route:** `app/api/planet-events/route.js`
+- **Computation:** `lib/planetEvents.js` using `astronomy-engine`
+- **Bodies:** Sun, Mercury, Venus, Mars, Jupiter, Saturn (Moon optional via checkbox)
+- **Events computed:**
+  - `I` — Ingress (planet enters a new zodiac sign)
+  - `R` — Station Retrograde (prograde → retrograde)
+  - `S/D` — Station Direct (retrograde → prograde)
+- **Key implementation note:** Use `Ecliptic(GeoVector(body, date, true)).elon` for geocentric ecliptic longitude. `EclipticLongitude()` from astronomy-engine is heliocentric and will never show retrograde motion.
+- **Input:** year (1900–2100) + optional Moon toggle; returns ~59 events/year (without Moon)
+- No external API or API key required
+
+## next.config.js
+
+`serverExternalPackages: ['astronomy-engine']` is required — astronomy-engine uses native ESM that Webpack cannot bundle correctly inside API routes.
 
 ## Environment Variables
 
-| Variable  | Where set         | Purpose                        |
-|-----------|-------------------|-------------------------------|
-| `API_KEY` | `.env` / Vercel   | freeastroapi.com authentication |
+No environment variables are currently required. All computation is done locally via `astronomy-engine`.
 
-## Deployment Note
-
-The Moon Cycles tab requires `API_KEY` to be configured in Vercel for production to work.
+| Variable  | Where set         | Purpose                         |
+|-----------|-------------------|---------------------------------|
+| `API_KEY` | `.env` / Vercel   | freeastroapi.com (not in use)   |
